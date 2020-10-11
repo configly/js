@@ -1,0 +1,36 @@
+{
+  "name": "configly-node",
+  "version": "1.0.0",
+  "description": "The dead simple place to put and retrieve static/config data into your Node.js application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/configly/node.git"
+  },
+  "keywords": [
+    "config",
+    "cms",
+    "static",
+    "configly",
+    "config.ly",
+    "client"
+  ],
+  "author": {
+    "name": "Configly",
+    "email": "tools+npm@config.ly",
+    "url": "https//config.ly"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/configly/node/issues"
+  },
+  "homepage": "https://github.com/configly/node#readme",
+  "dependencies": {
+    "assert": "^2.0.0",
+    "axios": "^0.20.0",
+    "qs": "^6.9.4"
+  }
+}
