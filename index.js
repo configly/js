@@ -56,9 +56,25 @@ class Configly {
     options = options || {};
     assert(apiKey, 'You must supply your API Key. You can find it by logging in to Config.ly');
 
+    this.cache = {};
+    this.cacheTtl = {};
     this.apiKey = apiKey;
-    this.enableCache = !!options.enableCache;
+    this.enableCache = options.enableCache === undefined ? true : options.enableCache;
     this.timeout = options.timeout || 3000;
+  }
+
+  isCached (key) {
+    let value = this.cache[key];
+    if (!value) {
+      return false;
+    }
+    if (this.cacheTtl[key] < Date.now()) {
+      return false
+    }
+    return true;
+  }
+  cacheGet (key) {
+    return this.cache[key];
   }
 
   /**
@@ -77,7 +93,7 @@ class Configly {
     assert(keyIsValid, 'key must be a string');
     assert(key.length > 0, 'key must be a non-empty string');
 
-    if (options === undefined && isFunction(options)) {
+    if (callback === undefined && isFunction(options)) {
       callback = options;
     }
     options = options || {};
@@ -90,6 +106,19 @@ class Configly {
       key = [key];
     }
 
+    let cacheIsEnabled = true;
+    if (options.enableCache !== undefined) {
+      cacheIsEnabled = options.enableCache;
+    } else if (!this.enableCache) {
+      cacheIsEnabled = false;
+    }
+
+    // Check the cache
+    if (cacheIsEnabled && this.isCached(key)) {
+      callback(this.cacheGet(key));
+      return;
+    }
+
     axios.get(GET_API_URL, {
       auth: {
         username: this.apiKey,
@@ -98,22 +127,21 @@ class Configly {
       paramsSerializer: (params) => {
         return qs.stringify(params, {arrayFormat: 'brackets'})
       },
-      timeout: this.timeout,
+      timeout: options.timeout || this.timeout,
     }).then((response) => {
       let result = response.data.data[ key ].value;
+      let ttl = response.data.ttl;
+      this.cacheTtl[key] = Date.now() + ttl;
+      this.cache[key] = result;
       if (callback) callback(result);
     }).catch((error) => {
       if (callback) callback(null, error);
     });
   }
-  parseResponse(resp, key) {
-    const { data } = resp;
-    retur
-  }
 }
 
 // From underscore.js: http://underscorejs.org/
-function isFunction(func) {
+function isFunction(obj) {
  return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 
