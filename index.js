@@ -1,41 +1,27 @@
 'use strict'
-
 const assert = require('assert');
 const axios = require('axios');
 const qs = require('qs');
+const removeSlash = require('remove-trailing-slash');
 
-const VERSION = '1.0';
+const VERSION = require('./package.json').version;
 
 const GET_KEY_IDENTIFIER = 'keys[]';
 
-//const GET_API_URL = 'https://config.ly/api/v1/value';
-const GET_API_URL = 'http://localhost:3000/api/v1/value';
+const GET_API_PATH = '/api/v1/value';
 
 
 /**
  * Config.ly: the dead simple place to put and retrieve your static/config data.
  *
- * Remember: do NOT assign the result of a configly.get() to a long-lived variable; in order for
+ * Remember: *do NOT* assign the result of a configly.get() to a long-lived variable; in order for
  * the value to fetch from the server, you must call configly.get().
  *
- *
- * There are two modes to run Configly.
- *
- * (1) Prefetch with Sync calls
- *
- * Here, you MUST call init(keys, cb) on your server startup. For example with Express, consider
- * putting app.listen in the callback:
- *
- * init(['keyOne', keyTwo'], () => app.listen(PORT, 'Listening with Configly!'));
- *
- * Now, get(key) calls can be 'sync'; it'll never make a blocking server call. It returns
- * prefetched values from init() and sync updates in the background.
- *
- * (2) Async; no need to call init(), but each get(key, cb) call takes a callback.
+ * Each get(key, cb) call takes a callback:
  *
  * get('keyOne', (value) => console.log(value));
  *
- * get(key, cb) may or may not make a server request.
+ * Note that get(key, cb) may or may not make a server request.
  */
 class Configly {
   /**
@@ -56,6 +42,7 @@ class Configly {
     options = options || {};
     assert(apiKey, 'You must supply your API Key. You can find it by logging in to Config.ly');
 
+    this.host = removeSlash(options.host || 'https://config.ly');
     this.cache = {};
     this.cacheTtl = {};
     this.apiKey = apiKey;
@@ -73,6 +60,7 @@ class Configly {
     }
     return true;
   }
+
   cacheGet (key) {
     return this.cache[key];
   }
@@ -119,7 +107,8 @@ class Configly {
       return;
     }
 
-    axios.get(GET_API_URL, {
+    let url = `${this.host}${GET_API_PATH}`;
+    axios.get(url, {
       auth: {
         username: this.apiKey,
       },
@@ -145,3 +134,4 @@ function isFunction(obj) {
  return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 
+module.exports = Configly;

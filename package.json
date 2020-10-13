@@ -31,6 +31,10 @@
   "dependencies": {
     "assert": "^2.0.0",
     "axios": "^0.20.0",
-    "qs": "^6.9.4"
+    "qs": "^6.9.4",
+    "remove-trailing-slash": "^0.1.1"
+  },
+  "devDependencies": {
+    "jest": "^26.5.3"
   }
 }
