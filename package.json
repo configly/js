@@ -4,7 +4,7 @@
   "description": "The dead simple place to put and retrieve static/config data into your Node.js application",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
