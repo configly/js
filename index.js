@@ -17,11 +17,21 @@ const GET_API_PATH = '/api/v1/value';
  * Remember: *do NOT* assign the result of a configly.get() to a long-lived variable; in order for
  * the value to fetch from the server, you must call configly.get().
  *
- * Each get(key, cb) call takes a callback:
+ * Each get(key) return a promise;
  *
- * get('keyOne', (value) => console.log(value));
+ * const Configly = require('Configly');
+ * const configly = new Configly('API_KEY');
  *
- * Note that get(key, cb) may or may not make a server request.
+ * configly.get('keyOne').then((value) => console.log(value));
+ * // or
+ * const run = async () => {
+ *   return await Configly.get('keyOne');
+ * }
+ *
+ * Note that get(key) may or may not make a server request or fetch a cached value. You should
+ * assume it'll make a fast HTTP request. If you need something guaranteed to be faster, we
+ * recommend storing the value to a local variable; this means you won't receive updates, so
+ * be sure to call get() periodically.
  */
 class Configly {
   /**
@@ -30,13 +40,10 @@ class Configly {
    *
    * @param {String} writeKey
    * @param {Object} [options] (optional)
+   *   @property {Number} host (default: https://config.ly/) - Override the host for requests
    *   @property {Number} enableCache (default: true) - disabling the cache will result in an HTML
    *   fetch on every `get` call
    *   @property {Number} timeout (default: 3000) - timeout for request to Configly for data in ms.
-   *   @property {Object} defaultValues (default: {}) - defaultValues for each key that Configly
-   *   will use in case it can't reach the server and it doesn't have a pre-existing value.
-   *   When it has a previous value, it will default to that. Ensure the value types match the
-   *   types specified on http://config.ly.
    */
   constructor (apiKey, options) {
     options = options || {};
@@ -68,22 +75,19 @@ class Configly {
   /**
    * Fetch values for supplied key. The value may be cached but is still an async call.
    *
-   * @param {String} key - the keyto fetch.
+   * @param {String} key - the key to fetch.
    * @param {Object?} [options] optional to override the global parameters for this request (optional)
    *   @property {Number} enableCache (default: true) - disabling the cache will result in an HTML
    *   fetch on every `get` call
    *   @property {Number} timeout (default: 3000) - timeout for request to Configly for data in ms.
-   * @return { String | Number | Boolean | Array | Object } returns the stored value(s) as typed
-   *   in Config.ly.
+   * @return { Promse<String | Number | Boolean | Array | Object> } returns a promise of the stored
+   * value(s) as typed in Config.ly.
    */
-  get (key, options, callback) {
+  get (key, options) {
     const keyIsValid = typeof key === 'string' || Array.isArray(key);
     assert(keyIsValid, 'key must be a string');
     assert(key.length > 0, 'key must be a non-empty string');
 
-    if (callback === undefined && isFunction(options)) {
-      callback = options;
-    }
     options = options || {};
 
     const headers = { };
@@ -103,12 +107,11 @@ class Configly {
 
     // Check the cache
     if (cacheIsEnabled && this.isCached(key)) {
-      callback(this.cacheGet(key));
-      return;
+      return Promise.reasolve(this.cacheGet(key));
     }
 
     let url = `${this.host}${GET_API_PATH}`;
-    axios.get(url, {
+    return axios.get(url, {
       auth: {
         username: this.apiKey,
       },
@@ -122,16 +125,12 @@ class Configly {
       let ttl = response.data.ttl;
       this.cacheTtl[key] = Date.now() + ttl;
       this.cache[key] = result;
-      if (callback) callback(result);
     }).catch((error) => {
       if (callback) callback(null, error);
+      console.log('error' + error.toString());
+      // TODO: handle error
     });
   }
-}
-
-// From underscore.js: http://underscorejs.org/
-function isFunction(obj) {
- return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 
 module.exports = Configly;
