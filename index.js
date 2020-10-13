@@ -107,7 +107,7 @@ class Configly {
 
     // Check the cache
     if (cacheIsEnabled && this.isCached(key)) {
-      return Promise.reasolve(this.cacheGet(key));
+      return Promise.resolve(this.cacheGet(key));
     }
 
     let url = `${this.host}${GET_API_PATH}`;
@@ -121,14 +121,14 @@ class Configly {
       },
       timeout: options.timeout || this.timeout,
     }).then((response) => {
-      let result = response.data.data[ key ].value;
-      let ttl = response.data.ttl;
+      const { value, ttl } = response.data.data[ key ];
       this.cacheTtl[key] = Date.now() + ttl;
-      this.cache[key] = result;
+      this.cache[key] = value;
+      return value;
     }).catch((error) => {
-      if (callback) callback(null, error);
       console.log('error' + error.toString());
       // TODO: handle error
+      throw error;
     });
   }
 }
