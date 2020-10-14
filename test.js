@@ -14,21 +14,51 @@ const serverResp = {
   },
   missingKeys: [],
 };
-axios.get.mockResolvedValue(serverResp);
-/*
-*/
+
+// axios stores response data in a 'data' field
+axios.get.mockResolvedValue({ data: serverResp });
+
 const KEY = 'IM A KEY!!!';
-// changing host reflects right url
+
 test('Overriding the host works', () => {
   const host = 'http://afakehost.ly';
   const configly = new Configly(KEY, { host });
-  configly.get('testval');
+  configly.get('slogan');
   let matcher = expect.stringMatching(new RegExp(`^${host}`));
   expect(axios.get).toHaveBeenCalledWith(matcher, expect.anything());
 });
-// using default host reflects prod url
-// cache is populated by default
+
+test('Default URL is expected', () => {
+  const configly = new Configly(KEY);
+  configly.get('slogan');
+
+  const EXPECTED_URL = 'https://config.ly/';
+  let matcher = expect.stringMatching(new RegExp(`^${EXPECTED_URL}`));
+  expect(axios.get).toHaveBeenCalledWith(matcher, expect.anything());
+});
+
+test('Cache is populated with default settings', async done => {
+  const configly = new Configly(KEY);
+  //expect(configly.cache).toBe({});
+  let key = 'slogan';
+  try {
+    await configly.get(key);
+  } catch (error) {
+    done(error);
+  }
+
+  const { data } = serverResp;
+  expect(configly.cache).toMatchObject({[key]: data[key].value});
+  expect(Object.keys(configly.cache || {}).length).toBe(1);
+
+  const EXPECTED_URL = 'https://config.ly/';
+  let matcher = expect.stringMatching(new RegExp(`^${EXPECTED_URL}`));
+  expect(axios.get).toHaveBeenCalledWith(matcher, expect.anything());
+  done();
+});
 // disable cache works
+// disable cache on get works
+// ensure correct data is sent to server
 // timeout adjusts the timeout amount
 // default timeout value is 3k
 
