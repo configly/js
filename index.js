@@ -84,8 +84,7 @@ class Configly {
    * value(s) as typed in Config.ly.
    */
   get (key, options) {
-    const keyIsValid = typeof key === 'string' || Array.isArray(key);
-    assert(keyIsValid, 'key must be a string');
+    assert(typeof key === 'string', 'key must be a string');
     assert(key.length > 0, 'key must be a non-empty string');
 
     options = options || {};
@@ -93,9 +92,6 @@ class Configly {
     const headers = { };
     if (typeof window === 'undefined') {
       headers['user-agent'] = ['configly-node', VERSION].join('/');
-    }
-    if (typeof key === 'string'){
-      key = [key];
     }
 
     let cacheIsEnabled = true;
@@ -115,19 +111,21 @@ class Configly {
       auth: {
         username: this.apiKey,
       },
-      params: { keys: key },
+      params: { keys: [ key ] },
       paramsSerializer: (params) => {
         return qs.stringify(params, {arrayFormat: 'brackets'})
       },
       timeout: options.timeout || this.timeout,
     }).then((response) => {
       const { value, ttl } = response.data.data[ key ];
-      this.cacheTtl[key] = Date.now() + ttl;
-      this.cache[key] = value;
+
+      if (cacheIsEnabled) {
+        this.cacheTtl[key] = Date.now() + ttl;
+        this.cache[key] = value;
+      }
+
       return value;
     }).catch((error) => {
-      console.log('error' + error.toString());
-      // TODO: handle error
       throw error;
     });
   }
