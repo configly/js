@@ -1,36 +1,68 @@
 # Configly JavaScript library
+> The Node.JS and JavaScript library for [Configly](https://www.config.ly): the modern config/static
+data key/value store, updateable through a web UI.
 
-> [Config.ly](https://www.config.ly) is the right place for software developers to
-put their static/config data such as copy, exponential backoff parameters, and styling. It works
-on Node.JS and in the browser.
+![npm](https://img.shields.io/npm/v/configly-js)
+[![Try on RunKit](https://badge.runkitcdn.com/configly.svg)](https://runkit.com/npm/configly)
+![GitHub](https://img.shields.io/github/license/configly/js)
+
+Table of Contents
+=================
+
+  * [What is Configly?](#what-is-configly)
+     * [Core Features](#core-features)
+  * [Getting Started](#getting-started)
+     * [Get your API Key](#get-your-api-key)
+     * [Library installation](#library-installation)
+        * [For use in browsers](#for-use-in-browsers)
+  * [Usage](#usage)
+     * [Using Promises](#using-promises)
+  * [API Reference](#api-reference)
+     * [Initialization](#initialization)
+        * [Options](#options)
+     * [get(API_KEY, options?)](#getapi_key-options)
+        * [Basic example](#basic-example)
+        * [Parallel calls](#parallel-calls)
+        * [Options](#options-1)
+  * [License](#license)
+
 
 ## What is Configly?
-[Config.ly](https://www.config.ly) is a read-optimized static-data key/value store API. It's built
-for modern development with the aim of being dead simple to use, low-latency, and high-availability.
-Config.ly, you can skip slow deploy processes (such as with the iOS App Store) and deploy
-changes near instantly; allow marketing to make its own copy changes without asking developers;
-and ensure you do not have [data duplicated across clients][https://en.wikipedia.org/wiki/Don%27t_repeat_yourself].
+
+[Configly](https://www.config.ly) is the place software developers put their static / config data&mdash;like
+marketing copy, exponential backoff parameters, and styling. 
+They can then update that data directly from [https://wwww.config.ly](https://www.config.ly/)
+without having to wait for a deploy process / app store review. Their app or webapp receives it near instantly. 
+Non-technical folks themselves can even make changes so developers can focus on hard software problems and not copy tweaks.
+
+On the backend, [Configly](https://www.config.ly) provides a read-optimized static-data key/value store built
+with the aim of being dead simple to use, low-latency, and high-availability. The client libraries
+are made to be dead simple, lean, and efficient (via enhancements like caching). Configly is built for modern software development.
+
+There are a host of other benefits to using Configly (such as ensure you do not have [data duplicated across clients](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)),
+read more about the benefits at [Configly](config.ly).
 
 ### Core Features
 
-- API to fetch strings, JSON Blobs, booleans, and numbers from the Config.ly backend
-- Web interface for modifying these values without having to deploy code (called Configulator).
-- High availability, high-throuput. low-latency backend. 
+- API to fetch strings, JSON Blobs, Booleans, aNd numbers from the Configly backend
+- Web interface for modifying these values without having to deploy code (we call our beloved web interface _the Configulator_).
+- High availability, high-throughput, low-latency backend. 
 - Smart caching on the client libraries to minimize server requests.
+- Client libraries available in expanding amount of languages.
 
 ## Getting Started
 
-### Get your access token.
-If you do not have an account with [Config.ly](https://www.config.ly), you'll need one (since 
-you'll be putting your data there).  Registration is lightning quick - you can get there by 
+### Get your API Key
+You'll need a [Configly](https://www.config.ly) account. Registration is lightning quick&mdash;you can register via
 visiting [https://www.config.ly/signup](https://www.config.ly/signup).
 
-After signing up, you can grab your access token, which you'll need below.
+After signing up, you can grab your API Key from [https://www.config.ly/register](https://www.config.ly/register). 
+You'll need your API Key to setup the API below.
 
 ### Library installation
 
 ```sh
-npm install configly
+npm install configly-js
 ```
 
 #### For use in browsers
@@ -41,9 +73,8 @@ We recommend downloading the SDK via npm and including it on your site for maxim
 The package needs to be configured with your account's API key, which is available in the 
 [Configly Configulator](https://www.config.ly/config)
 
-The golden rule of Config.ly client side apps is: *do NOT* assign the result of a configly.get() 
-to a long-lived variable; in order forthe value to fetch from the server, you must call configly.get().
-
+> The golden rule of Configly library use is: **do NOT** assign the result of a `get()`
+to a long-lived variable; in order for the value to fetch from the server, you must call `get()`.
 
 ```js
 const Configly = require('Configly');
@@ -53,7 +84,7 @@ configly.get('your_key_of_choice').then((value) => console.log(value));
 ```
 
 ### Using Promises
-Configly's `get` returns a chainable promise which can be used instead of a regular callback:
+Configly's `get()` returns a chainable promise which can be used instead of a regular callback:
 
 ```js
 configly.get('the_best_superhero')
@@ -72,8 +103,10 @@ configly.get('the_best_superhero')
     // Deal with error
   });
 ```
+> Configly requires support for [ES6 Promises](http://caniuse.com/promises). You can [polyfill](https://github.com/jakearchibald/es6-promise)
+ if your stack does not support ES6 promises.
 
-## API Documentation & Reference
+## API Reference
 ### Initialization
 
 Initialize the Configly library via the constructor:
@@ -93,38 +126,56 @@ const configly = new Configly(API_KEY, {
 };
 ```
 
-The `API_KEY` is required; you can get it via logging in with your account on the 
+The `API_KEY` is the only required parameter; you can get it via logging in with your account on the 
 [Configly Configulator](https://www.config.ly/config).
 
 #### Options
+All options are optional. The options object itself can be omitted.
 
 | Option | Default | Description |
 | ----- | ----- | -------- |
-| enableCache | `true` | Permits you to disable the cache, resulting in an HTTP fetch on every `get` call |
-| timeout | 3000 | The millisecond (ms) timeout for requests to Config.ly's backend.
-| host | `'api.config.ly'` | Host that requests are made to
+| `enableCache` | `true` | Permits you to disable the cache, resulting in an HTTP fetch on every `get()` call |
+| `timeout` | 3000 | Timeout for requests to Configly's backend in milliseconds (ms).
+| `host` | `'api.config.ly'` | Host that requests are made to
 
-### Get
+### `get(API_KEY, options?)`
 The core function of the library is to request values stored in Configly and you do this
-via the `get` method. This is an async call; it may be lightning fast as the
-value could be cached. Other times, it will make a server call.
+via the `get()` method. 
 
+`get()` accepts a string as its first argument&dash;a key. Configly will fetch the corresponding 
+value from the Configly servers (or look it up in the local library cache). 
+`get()` returns an [ES6 Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), 
+fulfilled with the value. So, the first value in `get('test_key').then` will be the key's value.
+
+```js
+configly.get(key)
+  .then((value) => {
+    console.log(`${key}'s corresponding value on Configly's server is ${value}`.)
+  });
+```
+
+This is an async call; it may be lightning fast as the value could be cached. Other times, it will make a server call.
 #### Basic example
-In the following example, the [Configulator](https://www.config.ly/config) has the key:values of:
+In the following example, the [Configulator](https://www.config.ly/config) has a value stored for
+the key `favorite_games`
 
 ```
-favorite_games: ['factorio', 'dominion', 'counterstrike', 'civ', 'arkham']
+// This value is stored on the Config.ly servers.
+favorite_games = ['factorio', 'dominion', 'counterstrike', 'civ', 'arkham']
 
 ```
+The JavaScript example client code is:
 
 ```js
 configly.get('favorite_games')
   .then((games) => {
-    // It's good coding practice to code defensively
+    // It's good coding practice to code defensively; someone could have changed the value in
+    // the Configulator.
     if (!Array.isAray(games)) {
-      games =['factorio', 'counterstrike', 'civ', 'arkham'];
+      games = ['factorio', 'counterstrike', 'civ', 'arkham'];
     }
 
+    console.log('The best games!');
     for (let i = 0; i < games.length; i++) {
       console.log(games[i]);
     }
@@ -132,18 +183,19 @@ configly.get('favorite_games')
 ```
 
 #### Parallel calls
-Because `get` may call the server to fetch a key, you may want to fetch many values in parallel.
-Note that `get` returns an [ES6 Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise),
+`get()` may call the server to fetch a key and you may want to store many values in Configly;
+you may want to fetch some of those values in parallel.
+Note that `get()` returns an [ES6 Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise),
 so you can use [`Promise.all`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all).
 
 ```js
-Promise.all([configly.get('POLLING_FREQUENCY'), configly.get('MARKETING_COPY')])
+Promise.all([ configly.get('NUM_WEATHER_RETRY_ATTEMPTS'), configly.get('WEATHER_MARKETING_COPY') ])
   .then((numRetries, copy) => {
-    // a made up service that returns a promise.
-    return Promise.all([ WeatherService.getWeather(numRetries), copy]);
+    // WeatherService is a made up service that returns an ES6 Promise.
+    return Promise.all([ WeatherService.getWeather(numRetries), copy ]);
   })
   .then((weather, copy) => {
-    // assumes this method renders an HTML tempalte. 
+    // Assumes this method renders an HTML template&mdash;for example like in express.
     res.render('foecast', {
       weatherInfo: weather,
       marketingCopy: copy,
@@ -152,13 +204,14 @@ Promise.all([configly.get('POLLING_FREQUENCY'), configly.get('MARKETING_COPY')])
 ```
 
 #### Options
-Like the constructor, `get` accepts the same set of options that override any defaults for that
-`get` call only.
+Like the constructor, `get()` accepts the same set of options that override any default options for that
+`get()` call only.
 
 ```js
 const Configly = require('Configly');
 const configly = new Configly(API_KEY, {
   timeout: 1000, 
+  enableCache: disable,
 };
 
 configly.get('pricing_info', {
@@ -170,10 +223,7 @@ configly.get('pricing_info', {
   return configly.get(pricingInfo['currency']);
 });
 ```
-
-### Promises
-axios depends on a native ES6 Promise implementation to be [supported](http://caniuse.com/promises).
-If your environment doesn't support ES6 Promises, you can [polyfill](https://github.com/jakearchibald/es6-promise).
+For both calls to `configly.get()` in this example, the cache is disabled.
 
 ## License
 
