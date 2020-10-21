@@ -20,7 +20,7 @@ Table of Contents
   * [API Reference](#api-reference)
      * [Initialization](#initialization)
         * [Options](#options)
-     * [get(API_KEY, options?)](#getapi_key-options)
+     * [get(key, options?)](#getapi_key-options)
         * [Basic example](#basic-example)
         * [Parallel calls](#parallel-calls)
         * [Options](#options-1)
@@ -138,7 +138,7 @@ All options are optional. The options object itself can be omitted.
 | `timeout` | 3000 | Timeout for requests to Configly's backend in milliseconds (ms).
 | `host` | `'api.config.ly'` | Host that requests are made to
 
-### `get(API_KEY, options?)`
+### `get(key, options?)`
 The core function of the library is to request values stored in Configly and you do this
 via the `get()` method. 
 
@@ -171,7 +171,7 @@ configly.get('favorite_games')
   .then((games) => {
     // It's good coding practice to code defensively; someone could have changed the value in
     // the Configulator.
-    if (!Array.isAray(games)) {
+    if (!Array.isArray(games)) {
       games = ['factorio', 'counterstrike', 'civ', 'arkham'];
     }
 
