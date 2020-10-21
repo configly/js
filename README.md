@@ -30,9 +30,9 @@ Table of Contents
 ## What is Configly?
 
 [Configly](https://www.config.ly) is the place software developers put their static / config data&mdash;like
-marketing copy, exponential backoff parameters, and styling. 
+ copy, styling, and minor configuration values.
 They can then update that data directly from [https://wwww.config.ly](https://www.config.ly/)
-without having to wait for a deploy process / app store review. Their app or webapp receives it near instantly. 
+without having to wait for a deploy process / app store review. Their app or webapp receives the data near instantly. 
 Non-technical folks themselves can even make changes so developers can focus on hard software problems and not copy tweaks.
 
 On the backend, [Configly](https://www.config.ly) provides a read-optimized static-data key/value store built
