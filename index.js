@@ -20,14 +20,14 @@ const GET_API_PATH = '/api/v1/value';
  * Configly value for the supplied key. Please see the example:
  *
  * const Configly = require('Configly');
- * const configly = new Configly('API_KEY');
+ * const configly = Configly.init('API_KEY');
  *
  * configly.get('keyOne').then((value) => console.log(value));
  *
  * // or
  *
  * const run = async () => {
- *   return await Configly.get('keyOne');
+ *   return await configly.get('keyOne');
  * }
  *
  * Note that get(key) may or may not make a server request or fetch a cached value. You should
@@ -38,6 +38,24 @@ const GET_API_PATH = '/api/v1/value';
 class Configly {
 
   /**
+   * This method should NOT be called externally; please use Configly.init() or
+   * Configly.getInstance()
+   *
+   */
+  constructor () {
+    if (!!Configly.instance) {
+      return Configly.instance;
+    }
+
+    this.cache = {};
+    this.cacheTtl = {};
+    this.host = 'https://api.config.ly';
+    this.enableCache = true;
+    this.apiKey = '';
+    this.timeout = 3000;
+  }
+
+  /*
    * Initialize a new `Configly` with your account's `API Key` and an
    * optional dictionary of `options`.
    *
@@ -48,37 +66,57 @@ class Configly {
    *     @property {Number} enableCache (default: true) - disables the cache, resulting in an HTTP
    *       fetch on every `get` call
    *     @property {Number} timeout (default: 3000) - ms timeout for requests to Configly for data.
+   * @return Configly instance
    */
-  constructor (apiKey, options) {
-    options = options || {};
+  static init(apiKey, options) {
     assert(apiKey, 'You must supply your API Key. You can find it by logging in to Config.ly');
+    if (!!Configly.instance) {
+      assert.fail('configly.init() is called multiple times. It can only be called once.');
+    }
 
-    this.host = removeSlash(options.host || 'https://api.config.ly');
-    this.cache = {};
-    this.cacheTtl = {};
-    this.apiKey = apiKey;
-    this.enableCache = options.enableCache === undefined ? true : options.enableCache;
-    this.timeout = options.timeout || 3000;
+    let inst = new Configly();
+    options = options || {};
+    inst.host = removeSlash(options.host || inst.host);
+    inst.enableCache = options.enableCache === undefined ? inst.enableCache : options.enableCache;
+    inst.apiKey = apiKey;
+    inst.timeout = options.timeout || inst.timeout;
+    Configly.instance = inst;
+    return Configly.instance;
+  }
+  /*
+   * @return existing Configy instance. Configly.init() must be called before any invocation of
+   * getInstance()
+   */
+  static getInstance() {
+    if (!Configly.instance) {
+      assert.fail('Configly.getInstance() is called before Configly.init(); you must call init.');
+    }
+    return Configly.instance;
+  }
+  static getUnixTimestampSecs() {
+    return Math.round(Date.now() / 1000);
   }
 
-  _isCached (key) {
+  _isCached(key) {
     let value = this.cache[key];
     if (!value) {
       return false;
     }
-    if (this.cacheTtl[key] < Date.now()) {
+    if (this.cacheTtl[key] < Configly.getUnixTimestampSecs()) {
       return false
     }
     return true;
   }
 
-  _cacheGet (key) {
+  _cacheGet(key) {
     return this.cache[key];
   }
 
   /**
    * Fetch the value for the supplied key. This is an async call; it may be lightning fast as the
    * value may be cached.
+   *
+   * Configly.init() must be called before any invocation of get
    *
    * @param {String} key - the key to fetch.
    * @param {Object?} [options] overrides the global parameters set in the constructor for this
@@ -89,7 +127,7 @@ class Configly {
    * @return { Promse<String | Number | Boolean | Array | Object> } returns a promise of the stored
    *   value(s) as typed in Config.ly.
    */
-  get (key, options) {
+  get(key, options) {
     assert(typeof key === 'string', 'key must be a string');
     assert(key.length > 0, 'key must be a non-empty string');
 
@@ -126,7 +164,7 @@ class Configly {
       const { value, ttl } = response.data.data[ key ];
 
       if (cacheIsEnabled) {
-        this.cacheTtl[key] = Date.now() + ttl;
+        this.cacheTtl[key] = Configly.getUnixTimestampSecs() + ttl;
         this.cache[key] = value;
       }
 
@@ -135,6 +173,14 @@ class Configly {
       throw error;
     });
   }
-}
 
+  /**
+   * Destroys singleton; really meant for testing snd likely should not be used
+   * externally.
+   */
+  destroy() {
+    Configly.instance = null;
+  }
+}
+Configly.instance = null;
 module.exports = Configly;

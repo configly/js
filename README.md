@@ -31,7 +31,7 @@ Table of Contents
 
 [Configly](https://www.config.ly) is the place software developers put their static / config data&mdash;like
  copy, styling, and minor configuration values.
-They can then update that data directly from [https://wwww.config.ly](https://www.config.ly/)
+They can then update that data directly from [https://www.config.ly](https://www.config.ly/)
 without having to wait for a deploy process / app store review. Their app or webapp receives the data near instantly. 
 Non-technical folks themselves can even make changes so developers can focus on hard software problems and not copy tweaks.
 
