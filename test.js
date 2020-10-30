@@ -19,8 +19,7 @@ const serverResp = {
   missingKeys: [],
 };
 
-
-const KEY = 'IM A KEY!!!';
+const KEY = 'IM AN API KEY!!!';
 
 // Configly is a singleton, clear the singleton and re-initialize after each test
 let client = null;
@@ -37,6 +36,7 @@ afterEach(() => {
     .resetModules();
 });
 
+/** Init Tests **/
 test('Overriding the host works', () => {
   const host = 'http://afakehost.ly';
   client = Configly.init(KEY, { host });
@@ -56,6 +56,129 @@ test('Default URL is expected', () => {
   expect(axios.get).toHaveBeenCalledWith(matcher, expect.anything());
 });
 
+test('Error is thrown with no API key', () => {
+  let e = null;
+  try {
+    Configly.init();
+  } catch (error) {
+    e = error;
+  }
+  expect(e).toBeTruthy();
+});
+
+test('Error is thrown with blank API key', () => {
+  let e = null;
+  try {
+    Configly.init('');
+  } catch (error) {
+    e = error;
+  }
+  expect(e).toBeTruthy();
+});
+
+test('Error is thrown if init is called multiple times', () => {
+  let e = null;
+  Configly.init('abc');
+  try {
+    Configly.init('bdc');
+  } catch (error) {
+    e = error;
+  }
+  expect(e).toBeTruthy();
+});
+
+test('Init returns instance', () => {
+  let i = Configly.init('abc');
+  expect(i).toBe(Configly.getInstance());
+});
+
+/** Timeout **/
+test('Default timeout of 3000 used', async done => {
+  await Configly.init('abc').get('slogan');
+
+  expect(axios.get).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({timeout: 3000}));
+  done();
+});
+
+test('Global timeout override works ', async done => {
+  const timeout = 5000
+  await Configly.init('abc', { timeout }).get('slogan');
+
+  expect(axios.get).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({timeout }));
+  done();
+});
+
+test('get() timeout override works ', async done => {
+  const timeout = 2000;
+  await Configly.init('abc').get('slogan', { timeout });
+
+  expect(axios.get).toHaveBeenNthCalledWith(
+    1,
+    expect.anything(),
+    expect.objectContaining({timeout }));
+
+  // Other calls use the global default
+  await Configly.getInstance().get('cities');
+
+  expect(axios.get).toHaveBeenNthCalledWith(
+    2,
+    expect.anything(),
+    expect.objectContaining({ timeout: 3000 }));
+  done();
+});
+
+/** get() tests **/
+test('get() returns rejected promise error with no key', (done) => {
+  let e = null;
+  let c = Configly.init(KEY);
+  c.get()
+    .then(null, (e) => {
+      expect(e).toEqual(new TypeError('key must be a string'));
+      done();
+    });
+});
+
+test('get() returns rejected promise error with strange key', (done) => {
+  let e = null;
+  let c = Configly.init(KEY);
+  c.get([])
+    .then(null, (e) => {
+      expect(e).toEqual(new TypeError('key must be a string'));
+      done();
+    });
+});
+
+test('get() returns rejected promise error with empty string', (done) => {
+  let e = null;
+  let c = Configly.init(KEY);
+  c.get('')
+    .then(null, (e) => {
+      expect(e).toEqual(new Error('key must be a non-empty string'));
+      done();
+    });
+});
+
+test('get() uses the correct headers', (done) => {
+  await Configly.init('abc').get('slogan');
+
+  expect(axios.get).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({timeout: 3000}));
+  done();
+});
+
+test('get() called with an unknown key', (done) => {
+});
+
+test('get() called with an unknown api token', (done) => {
+});
+
+
+/** Cache tests **/
 test('Cache is populated with default settings', async done => {
   client = Configly.init(KEY);
 
@@ -388,7 +511,7 @@ test('Caching respects TTL correctly with several values', async done => {
 
 // TODO: HTTP response fails, return default cached value.
 
-test('Get() disable cache works on first fetch', async done => {
+test('get() disable cache works on first fetch', async done => {
   client = Configly.init(KEY);
 
   expect(client.cache).toEqual({});
@@ -409,7 +532,7 @@ test('Get() disable cache works on first fetch', async done => {
   done();
 });
 
-test('Get() disable cache works on third fetch', async done => {
+test('get() disable cache works on third fetch', async done => {
   client = Configly.init(KEY);
 
   expect(client.cache).toEqual({});
@@ -449,15 +572,3 @@ test('Get() disable cache works on third fetch', async done => {
   expect(axios.get).toHaveBeenCalledTimes(2);
   done();
 });
-
-// ensure correct data is sent to server
-// timeout adjusts the timeout amount
-// default timeout value is 3k
-
-// get
-// null or undefined string?
-// mock a string, boolean, js return type from server => works
-// ensure each is cached
-// ensure ttl is honored in cache
-// error handling
-// async / await example cuz I'm a n00b

@@ -1,5 +1,4 @@
 'use strict'
-const assert = require('assert');
 const axios = require('axios');
 const qs = require('qs');
 const removeSlash = require('remove-trailing-slash');
@@ -11,10 +10,10 @@ const GET_KEY_IDENTIFIER = 'keys[]';
 const GET_API_PATH = '/api/v1/value';
 
 /**
- * Config.ly: the dead simple place to put and retrieve your static/config data.
+ * Config.ly: the dead simple place to store and retrieve your static/config data.
  *
- * Remember: *do NOT* assign the result of a configly.get() to a long-lived variable; in order for
- * the value to fetch from the server, you must call configly.get().
+ * Remember: *do NOT* assign the result of a get() to a long-lived variable; in order for
+ * the value to fetch from the server, you must call get().
  *
  * Each get(key) returns a Promise; the first argument to the Promise fulfillment method is the
  * Configly value for the supplied key. Please see the example:
@@ -22,7 +21,7 @@ const GET_API_PATH = '/api/v1/value';
  * const Configly = require('Configly');
  * const configly = Configly.init('API_KEY');
  *
- * configly.get('keyOne').then((value) => console.log(value));
+ * configly.get('keyOne').then((valueForKeyOne) => console.log(valueForKeyOne));
  *
  * // or
  *
@@ -30,17 +29,14 @@ const GET_API_PATH = '/api/v1/value';
  *   return await configly.get('keyOne');
  * }
  *
- * Note that get(key) may or may not make a server request or fetch a cached value. You should
+ * Note that get(key) may make a server request or fetch a cached value. You should
  * assume it'll make a (fast) HTTP request. If you need something guaranteed to be faster, we
  * recommend storing the value to a local variable; BUT, be aware that this means you won't
  * receive updates to that variable, so be sure to call get() periodically.
  */
 class Configly {
-
   /**
-   * This method should NOT be called externally; please use Configly.init() or
-   * Configly.getInstance()
-   *
+   * This method should NOT be called externally; please use Configly.init().
    */
   constructor () {
     if (!!Configly.instance) {
@@ -56,7 +52,7 @@ class Configly {
   }
 
   /*
-   * Initialize a new `Configly` with your account's `API Key` and an
+   * Initialize the `Configly` singleton with your account's `API Key` and an
    * optional dictionary of `options`.
    *
    * @param {String} apiKey - your readonly Config.ly API key. You can find it at
@@ -67,11 +63,15 @@ class Configly {
    *       fetch on every `get` call
    *     @property {Number} timeout (default: 3000) - ms timeout for requests to Configly for data.
    * @return Configly instance
+   * @throws Error if an API Key is not supplied or if init is called multiple times.
    */
   static init(apiKey, options) {
-    assert(apiKey, 'You must supply your API Key. You can find it by logging in to Config.ly');
+    if (!apiKey || apiKey?.length == 0) {
+      throw new Error('You must supply your API Key. You can find it by logging in to Config.ly');
+    }
+
     if (!!Configly.instance) {
-      assert.fail('configly.init() is called multiple times. It can only be called once.');
+      throw new Error('configly.init() is called multiple times. It can only be called once.');
     }
 
     let inst = new Configly();
@@ -124,12 +124,19 @@ class Configly {
    *     @property {Number} enableCache (default: true) - disables the cache, resulting in an HTTP
    *       fetch on every `get` call.
    *     @property {Number} timeout (default: 3000) - timeout for request to Configly for data in ms.
-   * @return { Promse<String | Number | Boolean | Array | Object> } returns a promise of the stored
-   *   value(s) as typed in Config.ly.
+   * @return { Promse<String | Number | Boolean | Array | Object | Error> } returns, on success,
+   *   a promise of fulfilled with the stored value(s) as typed in Config.ly. On error, returns
+   *   a failed promise with error:
+   *     - TypeError if key is not a string or omitted
+   *     - Error if key an empty string
    */
   get(key, options) {
-    assert(typeof key === 'string', 'key must be a string');
-    assert(key.length > 0, 'key must be a non-empty string');
+    if (typeof key !== 'string') {
+      return Promise.reject(new TypeError('key must be a string'));
+    }
+    if (!key || key.length == 0) {
+      return Promise.reject(new Error('key must be a non-empty string'));
+    }
 
     options = options || {};
 
