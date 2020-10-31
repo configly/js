@@ -102,13 +102,13 @@ test('Default timeout of 3000 used', async done => {
   done();
 });
 
-test('Global timeout override works ', async done => {
+test('Global timeout override works', async done => {
   const timeout = 5000
   await Configly.init('abc', { timeout }).get('slogan');
 
   expect(axios.get).toHaveBeenCalledWith(
     expect.anything(),
-    expect.objectContaining({timeout }));
+    expect.objectContaining({ timeout }));
   done();
 });
 
@@ -162,19 +162,51 @@ test('get() returns rejected promise error with empty string', (done) => {
     });
 });
 
-test('get() uses the correct headers', (done) => {
+test('get() uses the correct headers', async (done) => {
   await Configly.init('abc').get('slogan');
 
   expect(axios.get).toHaveBeenCalledWith(
     expect.anything(),
-    expect.objectContaining({timeout: 3000}));
+    expect.objectContaining(
+      {
+        headers: expect.objectContaining({
+          'X-Lib-Version': 'configly-node/1.0.0',
+          'Accept': 'application/json',
+        }),
+      }));
   done();
 });
 
-test('get() called with an unknown key', (done) => {
+test('get() called with an unknown key', async (done) => {
+  const key = 'non-existing-key';
+  let v = await Configly.init('abc').get(key);
+  expect(v).toEqual(undefined);
+  expect(Configly.getInstance().cache[key]).toEqual(undefined);
+
+  done();
 });
 
-test('get() called with an unknown api token', (done) => {
+test('get() called with an unknown ApiToken', async (done) => {
+  const error = {
+    response: {
+      status: 401,
+      data: 'Not allowed',
+    }
+  };
+  axios.get.mockResolvedValue(Promise.reject(error));
+
+  const key = 'non-existing-key';
+  let wasError = false;
+  try {
+    await Configly.init('abc').get(key);
+  } catch (e) {
+    wasError = true;
+    expect(e.status).toEqual(401);
+    expect(e.message).toEqual('Not allowed');
+    expect(e.originalError).toEqual(error);
+  }
+  expect(wasError).toEqual(true);
+  done();
 });
 
 

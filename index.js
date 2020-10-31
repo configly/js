@@ -140,10 +140,14 @@ class Configly {
 
     options = options || {};
 
-    const headers = { };
-    if (typeof window === 'undefined') {
-      headers['user-agent'] = ['configly-node', VERSION].join('/');
-    }
+    const headers = {
+      'Accept': 'application/json',
+    };
+
+    // XXX: I think setting custom headers of X- is deprecated but I couldn't find another good
+    // header to use.
+    const agentLabel = typeof window === 'undefined' ? 'User-Agent' : 'X-Lib-Version';
+    headers[agentLabel] = ['configly-node', VERSION].join('/');
 
     let cacheIsEnabled = true;
     if (options.enableCache !== undefined) {
@@ -162,24 +166,50 @@ class Configly {
       auth: {
         username: this.apiKey,
       },
+      headers,
       params: { keys: [ key ] },
       paramsSerializer: (params) => {
         return qs.stringify(params, {arrayFormat: 'brackets'})
       },
-      timeout: options.timeout || this.timeout,
+      timeout: options.timeout || this.timeout || 3000,
     }).then((response) => {
-      const { value, ttl } = response.data.data[ key ];
+      let { value, ttl } = response.data.data[ key ] || {};
 
-      if (cacheIsEnabled) {
+      // There should always be a TTL. But just in case.
+      ttl = ttl || 60;
+      if (cacheIsEnabled && value !== undefined) {
         this.cacheTtl[key] = Configly.getUnixTimestampSecs() + ttl;
         this.cache[key] = value;
       }
 
       return value;
-    }).catch((error) => {
-      throw error;
-    });
+    }).catch(Configly.handleGetError);
   }
+  static makeError(status, message, originalError) {
+    return { status, message, originalError }
+  }
+
+  static handleGetError(error) {
+    let httpStatus = 'OTHER';
+    let message = [
+      'Something went wrong. Have you upgraded to the latest client?',
+      "Take a look at 'originalError' inside the error object for more details."
+    ].join('');
+
+    if (error.response) {
+      httpStatus = error.response.status;
+      message = error.response.data?.substring(0, 1000);
+    } else if (error.code == 'ECONNREFUSED') {
+      httpStatus = 'CONNECTION_ERROR';
+      message = [
+        'Configly didn\'t receive an HTTP response.',
+        'This could be because of a network disruption with the server or a bad supplied hostname.',
+        'If you\'ve supplied a host parameter, please ensure it is correct.',
+        'Otherwise, try again.'
+      ].join(' ');
+    }
+    return Promise.reject(Configly.makeError(httpStatus, message, error));
+  };
 
   /**
    * Destroys singleton; really meant for testing snd likely should not be used
