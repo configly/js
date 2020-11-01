@@ -18,12 +18,15 @@ Table of Contents
   * [Usage](#usage)
      * [Using Promises](#using-promises)
   * [API Reference](#api-reference)
-     * [Initialization](#initialization)
+     * [Initialization/`init()`](#initialization)
         * [Options](#options)
-     * [get(key, options?)](#getapi_key-options)
+        * [Errors](#errors)
+     * [`getInstance()`](#-getinstance---)
+     * [`get(key, options?)`](#getapi_key-options)
         * [Basic example](#basic-example)
         * [Parallel calls](#parallel-calls)
         * [Options](#options-1)
+        * [Errors](#errors-1)
   * [License](#license)
 
 
@@ -32,7 +35,7 @@ Table of Contents
 [Configly](https://www.config.ly) is the place software developers put their static / config data&mdash;like
  copy, styling, and minor configuration values.
 They can then update that data directly from [https://www.config.ly](https://www.config.ly/)
-without having to wait for a deploy process / app store review. Their app or webapp receives the data near instantly. 
+without having to wait for a deploy process / app store review. Their app or webapp receives the data near instantly.
 Non-technical folks themselves can even make changes so developers can focus on hard software problems and not copy tweaks.
 
 On the backend, [Configly](https://www.config.ly) provides a read-optimized static-data key/value store built
@@ -44,9 +47,9 @@ read more about the benefits at [Configly](config.ly).
 
 ### Core Features
 
-- API to fetch strings, JSON Blobs, Booleans, aNd numbers from the Configly backend
+- API to fetch strings, JSON Blobs (arrays and objects), Booleans, and numbers from the Configly backend
 - Web interface for modifying these values without having to deploy code (we call our beloved web interface _the Configulator_).
-- High availability, high-throughput, low-latency backend. 
+- High availability, high-throughput, low-latency backend.
 - Smart caching on the client libraries to minimize server requests.
 - Client libraries available in expanding amount of languages.
 
@@ -56,7 +59,7 @@ read more about the benefits at [Configly](config.ly).
 You'll need a [Configly](https://www.config.ly) account. Registration is lightning quick&mdash;you can register via
 visiting [https://www.config.ly/signup](https://www.config.ly/signup).
 
-After signing up, you can grab your API Key from [https://www.config.ly/register](https://www.config.ly/register). 
+After signing up, you can grab your API Key from [https://www.config.ly/register](https://www.config.ly/register).
 You'll need your API Key to setup the API below.
 
 ### Library installation
@@ -70,7 +73,7 @@ We recommend downloading the SDK via npm and including it on your site for maxim
 
 
 ## Usage
-The package needs to be configured with your account's API key, which is available in the 
+The package needs to be configured with your account's API key, which is available in the
 [Configly Configulator](https://www.config.ly/config)
 
 > The golden rule of Configly library use is: **do NOT** assign the result of a `get()`
@@ -78,7 +81,7 @@ to a long-lived variable; in order for the value to fetch from the server, you m
 
 ```js
 const Configly = require('Configly');
-const configly = new Configly('YOUR_API_KEY');
+const configly = Configly.init('YOUR_API_KEY');
 
 configly.get('your_key_of_choice').then((value) => console.log(value));
 ```
@@ -109,24 +112,27 @@ configly.get('the_best_superhero')
 ## API Reference
 ### Initialization
 
-Initialize the Configly library via the constructor:
+The library uses the [Singleton Pattern](https://en.wikipedia.org/wiki/Singleton_pattern); you
+*should not* create a new instance via the constructor.
+
+Initialize the Configly library via the `init()` static method, which returns the global instance:
 
 ```js
 const Configly = require('Configly');
-const configly = new Configly('YOUR_API_KEY');
+const configly = Configly.init('YOUR_API_KEY');
 ```
 
 You can initialize the library with several options:
 
 ```js
-const configly = new Configly(API_KEY, {
+const configly = Configly.init(API_KEY, {
   enableCache: true,
   timeout: 2000,
   host: 'api.config.ly',
 };
 ```
 
-The `API_KEY` is the only required parameter; you can get it via logging in with your account on the 
+The `API_KEY` is the only required parameter; you can get it via logging in with your account on the
 [Configly Configulator](https://www.config.ly/config).
 
 #### Options
@@ -138,13 +144,34 @@ All options are optional. The options object itself can be omitted.
 | `timeout` | 3000 | Timeout for requests to Configly's backend in milliseconds (ms).
 | `host` | `'api.config.ly'` | Host that requests are made to
 
+#### Errors
+The `init()` method throws an `Error` if the API key is not supplied or if it is called
+multiple times. The method does NOT check for validity of the key; that happens on each `get()`
+request. See: [`get() errors`](#errors-1)
+
+
+### `getInstance()`
+
+To access the global instance, you can call `getInstance()`. You *must* call `init()` first.
+```js
+// Perhaps this line is some initialization code in a seprate file such as
+// `app.js`
+Configly.init(API_KEY);
+
+// And perhaps this line is in a separate file like `routes,js`
+const getIndex = await (req, res) => {
+  let tagLine = async Configly.getInstance().get('marketing_tag_line');
+  res.render('marketing_splash', { tagLine });
+}
+```
+
 ### `get(key, options?)`
 The core function of the library is to request values stored in Configly and you do this
-via the `get()` method. 
+via the `get()` method.
 
-`get()` accepts a string as its first argument&dash;a key. Configly will fetch the corresponding 
-value from the Configly servers (or look it up in the local library cache). 
-`get()` returns an [ES6 Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), 
+`get()` accepts a string as its first argument&dash;a key. Configly will fetch the corresponding
+value from the Configly servers (or look it up in the local library cache).
+`get()` returns an [ES6 Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise),
 fulfilled with the value. So, the first value in `get('test_key').then` will be the key's value.
 
 ```js
@@ -209,21 +236,72 @@ Like the constructor, `get()` accepts the same set of options that override any 
 
 ```js
 const Configly = require('Configly');
-const configly = new Configly(API_KEY, {
-  timeout: 1000, 
+const configly = Configly.init(API_KEY, {
+  timeout: 1000,
   enableCache: disable,
 };
 
 configly.get('pricing_info', {
   // Because pricing info is so important to our business logic, we're willing
   // to have a longer timeout.
-  timeout: 5000, 
+  timeout: 5000,
 }).then((pricingInfo) => {
   // This next `get` call will default to the constructor's `timeout` value (1000).
   return configly.get(pricingInfo['currency']);
 });
 ```
 For both calls to `configly.get()` in this example, the cache is disabled.
+
+#### Errors
+On error,`get()` returns a rejected promise with an object with the following properties
+
+  - `status`: the HTTP status code or error name.
+     You can see the potential values in the `Configly.ERRORS` object.
+  - `message`: text description of the error. Hopefully it's helpful!
+  - `originalError`: the originating JavaScript `Error` object
+
+##### Error `status`es
+
+The potential values for the `status` key of the error returned via `get` (i.e. `get(key).catch(error)`) are:
+
+| Key   | Explanation  |
+| ----- | -------- |
+| `INVALID_API_KEY` | Configly's server returned a 401. This likely means the `API Key` supplied in `init()` is incorrect. You can see your API Key in the [https://config.ly/config](Configluator). |
+| `CONNECTION_ERROR` | There was a problem communicating with the Config.ly backend. This could be due to a network fault or bad internet connection. Try again later. If the problem persists [let us know](https://config.ly/contact)! |
+| `OTHER` | A miscellaneous error. Take a look at the `originalError` value inside the returned object. This could indicate a problem with the library; if so, you can create a Github issue here. |
+
+These values can be referenced via `Configly.ERRORS`. e.g. `Configly.ERRORS.INVALID_API_KEY`.
+##### Example error handling code
+
+```js
+configly.get('best_star_wars_movie')
+  .then((movie) => {
+    doSomethingMagical(movie)
+  }).catch(error) => {
+    if (error.status == 'CONNECTION_ERROR') {
+      // Place retry code here
+    } else {
+      console.log(error.status, error.message, error.originalError);
+    }
+  });
+```
+
+or with the [alternative asynchronous syntax `async/await`](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous/Async_await):
+
+```js
+let doMovieMagic = async () => {
+  try {
+    let movie = await configly.get('best_star_wars_movie');
+    doSomethingMagical(movie)
+  } catch (error) {
+    if (error.status == 'CONNECTION_ERROR') {
+      // Place retry code here
+    } else {
+      console.log([error.status, error.message, error.originalError]);
+    }
+  }
+}
+```
 
 ## License
 

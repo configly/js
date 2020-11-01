@@ -190,17 +190,18 @@ class Configly {
   }
 
   static handleGetError(error) {
-    let httpStatus = 'OTHER';
+    let status = Configly.ERRORS.OTHER;
     let message = [
       'Something went wrong. Have you upgraded to the latest client?',
       "Take a look at 'originalError' inside the error object for more details."
     ].join('');
 
     if (error.response) {
-      httpStatus = error.response.status;
+      status = error.response.status;
+      status = status == 401 ? Configly.ERRORS.INVALID_API_KEY : status;
       message = error.response.data?.substring(0, 1000);
     } else if (error.code == 'ECONNREFUSED') {
-      httpStatus = 'CONNECTION_ERROR';
+      status = Configly.ERRORS.CONNECTION_ERROR;
       message = [
         'Configly didn\'t receive an HTTP response.',
         'This could be because of a network disruption with the server or a bad supplied hostname.',
@@ -208,7 +209,7 @@ class Configly {
         'Otherwise, try again.'
       ].join(' ');
     }
-    return Promise.reject(Configly.makeError(httpStatus, message, error));
+    return Promise.reject(Configly.makeError(status, message, error));
   };
 
   /**
@@ -219,5 +220,12 @@ class Configly {
     Configly.instance = null;
   }
 }
+Configly.ERRORS = {
+  OTHER: 'OTHER',
+  CONNECTION_ERROR: 'CONNECTION_ERROR',
+  INVALID_API_KEY: 'INVALID_API_KEY',
+};
+Object.freeze(Configly.ERRORS);
+
 Configly.instance = null;
 module.exports = Configly;

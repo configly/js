@@ -201,7 +201,7 @@ test('get() called with an unknown ApiToken', async (done) => {
     await Configly.init('abc').get(key);
   } catch (e) {
     wasError = true;
-    expect(e.status).toEqual(401);
+    expect(e.status).toEqual(Configly.ERRORS.INVALID_API_KEY);
     expect(e.message).toEqual('Not allowed');
     expect(e.originalError).toEqual(error);
   }
