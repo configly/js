@@ -4,7 +4,8 @@
   "description": "The dead simple place to put and retrieve static/config data into your Node.js application / JS",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "coverage": "jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,7 @@
     "remove-trailing-slash": "^0.1.1"
   },
   "devDependencies": {
+    "coveralls": "^3.1.0",
     "jest": "^26.5.3"
   }
 }

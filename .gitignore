@@ -2,3 +2,5 @@ node_modules
 _dev
 .vscode
 .DS_Store
+coverage/
+.coveralls.yml
