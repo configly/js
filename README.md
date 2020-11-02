@@ -37,22 +37,24 @@ Table of Contents
  copy, styling, and minor configuration values.
 They can then update that data directly from [https://www.config.ly](https://www.config.ly/)
 without having to wait for a deploy process / app store review. Their app or webapp receives the data near instantly.
-Non-technical folks themselves can even make changes so developers can focus on hard software problems and not copy tweaks.
+Non-technical folks themselves can publish changes freeing developers to focus on hard software problems and not copy tweaks.
 
 On the backend, [Configly](https://www.config.ly) provides a read-optimized static-data key/value store built
-with the aim of being dead simple to use, low-latency, and high-availability. The client libraries
-are made to be dead simple, lean, and efficient (via enhancements like caching). Configly is built for modern software development.
+with the aim of being low-latency, and high-availability. The client libraries are made to be dead-simple, lean, and efficient 
+(via enhancements like caching). There is a fancy [web UI called the Configulator](https://www.config.ly/config)
+for setting and updating the configs as well as seeing things like change history. Configly is built for modern software development.
 
-There are a host of other benefits to using Configly (such as ensure you do not have [data duplicated across clients](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)),
+There are a host of other benefits to using Configly (
+such as ensuring you do not have [data duplicated across clients](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself), reducing load on your primary DB, and better tolerance for traffic spikes),
 read more about the benefits at [Configly](config.ly).
 
 ### Core Features
 
-- API to fetch strings, JSON Blobs (arrays and objects), Booleans, and numbers from the Configly backend
-- Web interface for modifying these values without having to deploy code (we call our beloved web interface _the Configulator_).
+- API to fetch Strings, JSON Blobs (arrays and objects), Booleans, and Numbers from the Configly backend
+- [Web interface](https://www.config.ly/config) for modifying these values without having to deploy code (we call our beloved web interface _the Configulator_).
 - High availability, high-throughput, low-latency backend.
 - Smart caching on the client libraries to minimize server requests.
-- Client libraries available in expanding amount of languages.
+- Client libraries available in an expanding amount of languages.
 
 ## Getting Started
 
