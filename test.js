@@ -92,6 +92,13 @@ test('Init returns instance', () => {
   expect(i).toBe(Configly.getInstance());
 });
 
+test('Calling constructor after init returns Singleton', () => {
+  const host = 'http://afakehost.ly';
+  client = Configly.init(KEY, { host });
+  expect(new Configly()).toBe(client)
+});
+
+
 /** Timeout **/
 test('Default timeout of 3000 used', async done => {
   await Configly.init('abc').get('slogan');
@@ -131,6 +138,12 @@ test('get() timeout override works ', async done => {
   done();
 });
 
+/** getInstance() tests **/
+test('Calling getInstance() without init results in an error', () => {
+  expect(Configly.getInstance.bind(Configly)).toThrow(Error);
+});
+
+
 /** get() tests **/
 test('get() returns rejected promise error with no key', (done) => {
   let e = null;
@@ -162,20 +175,7 @@ test('get() returns rejected promise error with empty string', (done) => {
     });
 });
 
-test('get() uses the correct headers', async (done) => {
-  await Configly.init('abc').get('slogan');
-
-  expect(axios.get).toHaveBeenCalledWith(
-    expect.anything(),
-    expect.objectContaining(
-      {
-        headers: expect.objectContaining({
-          'X-Lib-Version': 'configly-node/1.0.0',
-          'Accept': 'application/json',
-        }),
-      }));
-  done();
-});
+/** get() Error Handling **/
 
 test('get() called with an unknown key', async (done) => {
   const key = 'non-existing-key';
@@ -209,6 +209,46 @@ test('get() called with an unknown ApiToken', async (done) => {
   done();
 });
 
+test('get() called with an arbitrary HTTP error', async (done) => {
+  const error = {
+    response: {
+      status: 500,
+      data: 'Arbitrary error',
+    }
+  };
+  axios.get.mockResolvedValue(Promise.reject(error));
+
+  const key = 'non-existing-key';
+  let wasError = false;
+  try {
+    await Configly.init('abc').get(key);
+  } catch (e) {
+    wasError = true;
+    expect(e.status).toEqual(Configly.ERRORS.OTHER);
+    expect(e.message).toEqual('Arbitrary error');
+    expect(e.originalError).toEqual(error);
+  }
+  expect(wasError).toEqual(true);
+  done();
+});
+
+test('get() connection error', async (done) => {
+  const error = {
+    code: 'ECONNREFUSED',
+  };
+  axios.get.mockResolvedValue(Promise.reject(error));
+  const key = 'non-existing-key';
+  let wasError = false;
+  try {
+    await Configly.init('abc').get(key);
+  } catch (e) {
+    wasError = true;
+    expect(e.status).toEqual(Configly.ERRORS.CONNECTION_ERROR);
+    expect(e.originalError).toEqual(error);
+  }
+  expect(wasError).toEqual(true);
+  done();
+});
 
 /** Cache tests **/
 test('Cache is populated with default settings', async done => {

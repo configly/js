@@ -89,7 +89,7 @@ class Configly {
    */
   static getInstance() {
     if (!Configly.instance) {
-      assert.fail('Configly.getInstance() is called before Configly.init(); you must call init.');
+      throw new Error('Configly.getInstance() is called before Configly.init(); you must call init.');
     }
     return Configly.instance;
   }
@@ -146,8 +146,7 @@ class Configly {
 
     // XXX: I think setting custom headers of X- is deprecated but I couldn't find another good
     // header to use.
-    const agentLabel = typeof window === 'undefined' ? 'User-Agent' : 'X-Lib-Version';
-    headers[agentLabel] = ['configly-node', VERSION].join('/');
+    headers['X-Lib-Version'] = ['configly-node', VERSION].join('/');
 
     let cacheIsEnabled = true;
     if (options.enableCache !== undefined) {
@@ -198,7 +197,7 @@ class Configly {
 
     if (error.response) {
       status = error.response.status;
-      status = status == 401 ? Configly.ERRORS.INVALID_API_KEY : status;
+      status = status == 401 ? Configly.ERRORS.INVALID_API_KEY : Configly.ERRORS.OTHER;
       message = error.response.data?.substring(0, 1000);
     } else if (error.code == 'ECONNREFUSED') {
       status = Configly.ERRORS.CONNECTION_ERROR;
