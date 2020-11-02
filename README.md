@@ -3,7 +3,8 @@
 data key/value store, updateable through a web UI.
 
 ![npm](https://img.shields.io/npm/v/configly-js)
-[![Try on RunKit](https://badge.runkitcdn.com/configly.svg)](https://runkit.com/npm/configly)
+[![Coverage Status](https://coveralls.io/repos/github/configly/js/badge.svg)](https://coveralls.io/github/configly/js)
+[![Try on RunKit](https://badge.runkitcdn.com/configly-js.svg)](https://runkit.com/npm/configly-js)
 ![GitHub](https://img.shields.io/github/license/configly/js)
 
 Table of Contents

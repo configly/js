@@ -1,4 +1,3 @@
-Copyright (C) 2011 Ask Bjørn Hansen
 Copyright (C) 2020 Configly (https://config.ly)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
