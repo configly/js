@@ -66,7 +66,7 @@ class Configly {
    * @throws Error if an API Key is not supplied or if init is called multiple times.
    */
   static init(apiKey, options) {
-    if (!apiKey || apiKey?.length == 0) {
+    if (!apiKey || !apiKey.length || apiKey.length == 0) {
       throw new Error('You must supply your API Key. You can find it by logging in to Config.ly');
     }
 
