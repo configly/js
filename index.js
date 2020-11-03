@@ -198,7 +198,7 @@ class Configly {
     if (error.response) {
       status = error.response.status;
       status = status == 401 ? Configly.ERRORS.INVALID_API_KEY : Configly.ERRORS.OTHER;
-      message = error.response.data?.substring(0, 1000);
+      message = (error.response.data || '').substring(0, 1000);
     } else if (error.code == 'ECONNREFUSED') {
       status = Configly.ERRORS.CONNECTION_ERROR;
       message = [
