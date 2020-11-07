@@ -1,0 +1,13 @@
+<html>
+    <head>
+        <script src="dist/main.js"> </script>
+    </head>
+    <body>
+        <script>
+            var configly = Configly.init('hq0t7YiT3NwEnoknH4fp6EHL66pOcDjv');
+            configly.get('hello').then((value) => { document.querySelector('#main').innerHTML = value; });
+        </script>
+        HI
+        <div id="main"></div>
+    </body>
+</html>
