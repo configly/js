@@ -1,6 +1,5 @@
 # Configly JavaScript library
-> The Node.JS and JavaScript library for [Configly](https://www.config.ly): the modern config/static
-data key/value store, updateable through a web UI.
+> The Node.JS and JavaScript library for [Configly](https://www.config.ly): the modern config/static data key/value store that's updatable through a fancy web UI.
 
 ![npm](https://img.shields.io/npm/v/configly-js)
 [![Coverage Status](https://coveralls.io/repos/github/configly/js/badge.svg)](https://coveralls.io/github/configly/js)
@@ -25,6 +24,7 @@ Table of Contents
      * [`getInstance()`](#-getinstance---)
      * [`get(key, options?)`](#getapi_key-options)
         * [Basic example](#basic-example)
+        * [Unknown keys](#unknown-keys)
         * [Parallel calls](#parallel-calls)
         * [Options](#options-1)
         * [Errors](#errors-1)
@@ -33,20 +33,18 @@ Table of Contents
 
 ## What is Configly?
 
-[Configly](https://www.config.ly) is the place software developers put their static / config data&mdash;like
- copy, styling, and minor configuration values.
-They can then update that data directly from [https://www.config.ly](https://www.config.ly/)
-without having to wait for a deploy process / app store review. Their app or webapp receives the data near instantly.
+[Configly](https://www.config.ly) is the place software developers put their static / config data&mdash;like copy, styling, and minor configuration values.
+They can then update that data directly from [https://www.config.ly/config](https://www.config.ly/config)
+without having to wait for a deploy process app store review. Their app or webapp receives the data near instantly.
 Non-technical folks themselves can publish changes freeing developers to focus on hard software problems and not copy tweaks.
 
 On the backend, [Configly](https://www.config.ly) provides a read-optimized static-data key/value store built
-with the aim of being low-latency, and high-availability. The client libraries are made to be dead-simple, lean, and efficient 
+with the aim of being low-latency, and high-availability. The client libraries are made to be dead-simple, lean, and efficient
 (via enhancements like caching). There is a fancy [web UI called the Configulator](https://config.ly/config)
-for setting and updating the configs as well as seeing things like change history. Configly is built for modern software development.
+for setting and updating the configs as well as seeing things like change history.
 
-There are a host of other benefits to using Configly (
-such as ensuring you do not have [data duplicated across clients](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself), reducing load on your primary DB, and better tolerance for traffic spikes),
-read more about the benefits at [Configly](config.ly).
+There are a host of other benefits to using Configly (such as ensuring you do not have [data duplicated across clients](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself), reducing load on your primary DB, and providing better tolerance for traffic spikes),
+read more about the benefits at [Configly](https://www.config.ly).
 
 ### Core Features
 
@@ -56,13 +54,72 @@ read more about the benefits at [Configly](config.ly).
 - Smart caching on the client libraries to minimize server requests.
 - Client libraries available in an expanding amount of languages.
 
+### Concepts / Core Ideas
+
+- A Configly account contains a set of *Configs*.
+- A *Config* is a key-value pair along with associated metadata (like TTL).
+- The keys are strings.
+- The values are one of the following types:
+
+| Type    |  notes   | Example(s)|
+|---------|----------|----------|
+| string  |          | "I <3 Configly!" |
+| number  | Can be integers or decimal; _be aware some clients require you to specify which when fetching_  | 31337, 1.618 |
+| boolean | only true or false | true, false |
+| jsonBlob | A [JSON5](https://json5.org/) (more relaxed JSON) array or object. | ``` ["one", 5, true]```, ```{"text": "Buy now!", color: "#0F0"}``` |
+
+#### More `jsonBlob` examples
+You can make arbitrarily complex JSON structures -- _as long_ as the top level is
+an object or array. This is incredibly powerful as you can send a host of data
+with a single _config_:
+
+
+A more complex array for a store inventory. Note that because we're using JSON5, quotes
+are optional for single words.
+```js
+[
+  "Simple T-shirt",
+  "Basic hoodie",
+  {
+    item: "Complex T-shirt",
+    sizes: ['S', 'M', 'L'],
+    price_us_cents: [1099, 1499, 1599],
+  }
+]
+```
+
+And a more complex object showing how you can internationalize and set style:
+```js
+{
+  "welcome_message": {
+    copy: {
+      'en': 'Welcome!',
+      'es': "¡Bienvenidos!",
+    }, style: {
+      color: '#0F0',
+      fontWeight: '700',
+    }
+  },
+  "buy_button" : {
+    copy: {
+      'en': 'Buy',
+      'es': "Comprar",
+    }, style: {
+      backgroundColor: "#F00",
+      border: "border-radius 10px",
+    }
+  }
+}
+```
+
+
 ## Getting Started
 
 ### Get your API Key
 You'll need a [Configly](https://www.config.ly) account. Registration is lightning quick&mdash;you can register via
 visiting [https://www.config.ly/signup](https://www.config.ly/signup).
 
-After signing up, you can grab your API Key from [https://www.config.ly/register](https://www.config.ly/register).
+After signing up, you can grab your API Key from [https://www.config.ly/config](https://www.config.ly/config).
 You'll need your API Key to setup the API below.
 
 ### Library installation
@@ -76,17 +133,55 @@ We recommend downloading the SDK via npm and including it on your site for maxim
 
 
 ## Usage
+> The golden rule of Configly library use is: **do NOT** assign the result of a `get()`
+to a long-lived variable; in order to check for new values from the server, you must call `get()`.
+
 The package needs to be configured with your account's API key, which is available in the
 [Configly Configulator](https://config.ly/config)
 
-> The golden rule of Configly library use is: **do NOT** assign the result of a `get()`
-to a long-lived variable; in order for the value to fetch from the server, you must call `get()`.
-
+```
+// This value is stored on the Config.ly servers.
+store_landing_page:
+ {
+   has_sale: true,
+   discount: 0.8,
+   items: ['T Shirt', 'Hoodie', 'Ferrari'],
+   price: [ 100, 250,  200000],
+ }
+```
+On the JavaScript client:
 ```js
+const API_KEY = 'Dem0apiKEY'; // This is our demo API Key. You'd want to substitute your own.
 const Configly = require('configly-js');
-const configly = Configly.init('YOUR_API_KEY');
+const configly = Configly.init(API_KEY);
 
-configly.get('your_key_of_choice').then((value) => console.log(value));
+/*
+ * Through Configly's web interface, We've set `store_landing_page` to:
+ */
+(async () =>
+  try {
+    const params = configly.get('store_params');
+    if (!params) {
+      console.log("Cannot find store_params on Configly's server! Wrong API Key?");
+      return;
+    }
+
+    let { has_sale, discount, items, price_cents } = prams;
+    if (has_sale) {
+      price_cents =  price_cents.map((price) => price*discount);
+    }
+
+    items.forEach( (_, i) => {
+      console.log(`${items[i]}: ${(price_cents[i]} USD`);
+    });
+
+  } catch((error) => {
+    const { status, message, originalError } = error;
+    console.log(`Sorry something went wrong: ${status}: ${message}`);
+    // You may want to submit error to any error reporting service you use like Sentry
+    // originalError shows the error the Configly library caught, if any, and can help you investigate.
+  }
+)();
 ```
 
 ### Using Promises
@@ -109,6 +204,8 @@ configly.get('the_best_superhero')
     console.log(heroInfo);
   })
   .catch((error) => {
+    const { status, message, originalError } = error;
+    console.log(`sorry something went wrong: ${status}: ${message}`);
     // Deal with error
   });
 
@@ -173,8 +270,7 @@ const getIndex = async (req, res) => {
 ```
 
 ### `get(key, options?)`
-The core function of the library is to request values stored in Configly and you do this
-via the `get()` method.
+`get()` exposes the core function of the library; is to request values stored in Configly.
 
 `get()` accepts a string as its first argument&dash;a key. Configly will fetch the corresponding
 value from the Configly servers (or look it up in the local library cache).
@@ -184,7 +280,7 @@ fulfilled with the value. So, the first value passed to `get('test_key').then()`
 ```js
 Configly.getInstance().get(key)
   .then((value) => {
-    console.log(`${key}'s corresponding value on Configly's server is ${value}`.)
+    console.log(`${key}'s corresponding value on Configly's server is ${value}.`)
   });
 ```
 
@@ -194,31 +290,54 @@ This is an async call; sometimes it will be lightning fast as the value could be
 In the following example, the [Configulator](https://config.ly/config) has a JSON string array stored with
 the key `favorite_games`
 
-```
+```js
 // This value is stored on the Config.ly servers.
-favorite_games = ['factorio', 'dominion', 'counterstrike', 'civ', 'arkham']
+product_info: {
+  name: "Factorio",
+  description: {
+    en: "Factorio is a game in which you build and maintain factories",
+    es: "Factorio es un videojuego en cual construyes y mantienes fábricas",
+    cn: "Factorio是一款视频游戏，您可以在其中建立和维护工厂。"
+  }
+}
 
 ```
-The JavaScript example client code is:
+The JavaScript client code:
 
 ```js
-Configly.getInstance().get('favorite_games')
-  .then((games) => {
-    // It's good coding practice to code defensively; someone could have changed the value in
-    // the Configulator.
-    if (!Array.isArray(games)) {
-      games = ['factorio', 'counterstrike', 'civ', 'arkham'];
+async getLandingPageData = (user) => {
+  // The internet is inherently unreliable.
+  // It's not a bad idea to have defaults juuust in case
+  const defaultValue = {
+    name: "Factorio",
+    description: "Literally the best game you've ever played",
+  };
+
+  try {
+    const productInfo = await Configly.getInstance().get('product_info');
+
+    // This means no value for the key was found. Perhaps the wrong API key was used?
+    if (!productInfo) {
+      return defaultValue;
     }
 
-    console.log('The best games!');
-    for (let i = 0; i < games.length; i++) {
-      console.log(games[i]);
+    const { name, description } = productInfo;
+    const language = user.getLanguage();
+    return {
+      name: name,
+      description: description[language],
     }
-  })
+  } catch ({ status, message }) {
+    console.log(`Error fetching product_info: ${status}: ${message}`);
+    return defaultValue;
+  }
+}
 ```
+#### Unknown keys
+When `get()` encounters a key it could not find, it return the value `undefined`.
 
 #### Parallel calls
-You may want to fetch multiple values. Because `get()` sometimes makes a server call, 
+You may want to fetch multiple values. Because `get()` sometimes makes a server call,
 in the worst case, this would mean multiple server calls. To be safe, you should execute the calls
 in parallel.
 Note that `get()` returns an [ES6 Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise),
@@ -265,6 +384,8 @@ For both calls to `configly.get()` in this example, the cache is disabled. But o
 has a timeout of 5000 ms; the second call uses the global setting of 1000 ms.
 
 #### Errors
+Note that when `get()` encounters a key it could not find, it return the value `undefined`; this case is not treated as an error.
+
 When there is an error,`get()` returns a rejected promise fulfilled with an object with the following properties
 
   - `status`: the error name
@@ -273,7 +394,6 @@ When there is an error,`get()` returns a rejected promise fulfilled with an obje
   - `originalError`: the originating JavaScript `Error` object
 
 ##### Error `status`es
-
 The potential values for the `status` key of the error returned via `get` (i.e. `get(key).catch(error)`) are:
 
 | Key   | Explanation  |
