@@ -138,7 +138,7 @@ Consider creating a simple `JSON Object or Array` Config called `greetings` and 
 
 [https://www.config.ly/config](https://www.config.ly/config) should look like this:
 
-![image](https://user-images.githubusercontent.com/184923/98487259-fb2f1800-21ef-11eb-9cf5-1cc6ea77f6b0.png)
+![image](https://user-images.githubusercontent.com/184923/98494454-09d6f880-220b-11eb-9ef7-36709ddc129f.png)
 
 Be sure to save via clicking 'Send to Clients'. Now, we'll write client code to fetch this key.
 
