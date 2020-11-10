@@ -184,6 +184,15 @@ Congratulations you have Configly working end-to-end! Now, feel free to use Conf
 #### For use in browsers
 We recommend downloading the SDK via npm and including it on your site for maximum availability.
 
+However, you can also access the library via the following [url](https://cdn.jsdelivr.net/npm/configly-js@2.0.4/dist/config.js)
+
+If you include this script in your page, you can load a config via code similar to the following:
+```
+  var configly = Configly.init('Dem0apiKEY');
+  configly.get('react-text').then((value) => { if (value) { document.querySelector('#main').innerHTML = value; }});
+```
+
+This assumes that you have an element on your page with the id `main`.
 
 ## Usage
 > The golden rule of Configly library use is: **do NOT** assign the result of a `get()`
