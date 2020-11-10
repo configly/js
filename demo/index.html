@@ -5,7 +5,7 @@
     <body>
         <script>
             var configly = Configly.init('Dem0apiKEY');
-            configly.get('react-text').then((value) => { document.querySelector('#main').innerHTML = value; });
+            configly.get('react-text').then((value) => { if (value) { document.querySelector('#main').innerHTML = value; }});
         </script>
         HI
         <div id="main"></div>
