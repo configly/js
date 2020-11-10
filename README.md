@@ -181,7 +181,7 @@ the client is getting the updates.
 
 Congratulations you have Configly working end-to-end! Now, feel free to use Configly with all your projects!
 
-#### For use in browsers
+### For use in browsers
 We recommend downloading the SDK via npm and including it on your site for maximum availability.
 
 However, you can also access the library via the following url: [https://cdn.jsdelivr.net/npm/configly-js@2.0.4/dist/config.js](https://cdn.jsdelivr.net/npm/configly-js@2.0.4/dist/config.js)
