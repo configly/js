@@ -158,9 +158,6 @@ const API_KEY = 'YOUR_API_KEY';
 const Configly = require('configly-js');
 const configly = Configly.init(API_KEY);
 
-/*
- * Through Configly's web interface, We've set `store_landing_page` to:
- */
 (async () => {
   try {
     const greetings = await configly.get('greetings');
@@ -197,7 +194,7 @@ The package needs to be configured with your account's API key, which is availab
 
 ```
 // This value is stored on the Config.ly servers.
-store_landing_page:
+store_catalog:
  {
    has_sale: true,
    discount: 0.8,
@@ -211,14 +208,11 @@ const API_KEY = 'Dem0apiKEY'; // This is our demo API Key. You'd want to substit
 const Configly = require('configly-js');
 const configly = Configly.init(API_KEY);
 
-/*
- * Through Configly's web interface, We've set `store_landing_page` to:
- */
 (async () =>
   try {
-    const params = configly.get('store_params');
+    const params = configly.get('store_catalog');
     if (!params) {
-      console.log("Cannot find store_params on Configly's server! Wrong API Key?");
+      console.log("Cannot find store_catalog on Configly's server! Wrong API Key?");
       return;
     }
 
