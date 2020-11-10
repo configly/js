@@ -202,9 +202,11 @@ store_catalog:
    price: [ 100, 250,  200000],
  }
 ```
-On the JavaScript client:
+On the Node.JS / JavaScript client:
+
+> You can run this code as-is since it uses our demo code. 
 ```js
-const API_KEY = 'Dem0apiKEY'; // This is our demo API Key. You'd want to substitute your own.
+const API_KEY = 'Dem0apiKEY'; // This is our demo API Key.
 const Configly = require('configly-js');
 const configly = Configly.init(API_KEY);
 
@@ -232,16 +234,18 @@ const configly = Configly.init(API_KEY);
     // originalError shows the error the Configly library caught, if any, and can help you investigate.
   }
 })();
+
 ```
 
 ### Using Promises
 Configly's `get()` returns a chainable promise which can be used instead of a regular callback:
 
+> You can run this code as-is since it uses our demo code. 
 ```js
 const Configly = require('configly-js');
-const configly = Configly.init('YOUR_API_KEY');
+const configly = Configly.init('Dem0apiKEY'); // This uses our demo API Key.
 
-let favoriteSuperhero = 'Iron Man';
+let favoriteSuperhero = 'Batman';
 configly.get('the_best_superhero')
   .then((value) => {
     if (value != undefined) {
