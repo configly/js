@@ -407,7 +407,7 @@ Promise.all([ configly.get('NUM_WEATHER_RETRY_ATTEMPTS'), configly.get('WEATHER_
   })
   .then(([weather, copy]) => {
     // Assumes this method renders an HTML template&mdash;for example like in express.
-    res.render('foecast', {
+    res.render('forecast', {
       weatherInfo: weather,
       marketingCopy: copy,
     });
