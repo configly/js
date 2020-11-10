@@ -208,30 +208,30 @@ const API_KEY = 'Dem0apiKEY'; // This is our demo API Key. You'd want to substit
 const Configly = require('configly-js');
 const configly = Configly.init(API_KEY);
 
-(async () =>
+(async () => {
   try {
-    const params = configly.get('store_catalog');
+    const params = await configly.get('store_catalog');
     if (!params) {
-      console.log("Cannot find store_catalog on Configly's server! Wrong API Key?");
+      console.log("Cannot find store_params on Configly's server! Wrong API Key?");
       return;
     }
 
-    let { has_sale, discount, items, price_cents } = prams;
+    let { has_sale, discount, items, prices } = params;
     if (has_sale) {
-      price_cents =  price_cents.map((price) => price*discount);
+      prices =  prices.map((price) => price*discount);
     }
 
     items.forEach( (_, i) => {
-      console.log(`${items[i]}: ${(price_cents[i]} USD`);
+      console.log(`${items[i]}: ${prices[i]} USD`);
     });
 
-  } catch((error) => {
+  } catch (error) {
     const { status, message, originalError } = error;
     console.log(`Sorry something went wrong: ${status}: ${message}`);
     // You may want to submit error to any error reporting service you use like Sentry
     // originalError shows the error the Configly library caught, if any, and can help you investigate.
   }
-)();
+})();
 ```
 
 ### Using Promises
