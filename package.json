@@ -1,6 +1,6 @@
 {
   "name": "configly-js",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "The dead simple place to put and retrieve static/config data into your Node.js application / JS",
   "main": "index.js",
   "scripts": {
