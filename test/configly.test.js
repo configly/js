@@ -1,7 +1,7 @@
 'use strict'
+const Configly = require('../src')
 
 const axios = require('axios');
-const Configly = require('./index.js');
 
 jest.mock('axios');
 
@@ -91,13 +91,6 @@ test('Init returns instance', () => {
   let i = Configly.init('abc');
   expect(i).toBe(Configly.getInstance());
 });
-
-test('Calling constructor after init returns Singleton', () => {
-  const host = 'http://afakehost.ly';
-  client = Configly.init(KEY, { host });
-  expect(new Configly()).toBe(client)
-});
-
 
 /** Timeout **/
 test('Default timeout of 3000 used', async done => {

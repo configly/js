@@ -1,13 +1,18 @@
-'use strict'
 const axios = require('axios');
 const qs = require('qs');
 const removeSlash = require('remove-trailing-slash');
 
-const VERSION = require('./package.json').version;
+const VERSION = require('../package.json').version;
 
 const GET_KEY_IDENTIFIER = 'keys[]';
 
 const GET_API_PATH = '/api/v1/value';
+
+interface ConfiglyOptions {
+  host?: string;
+  enableCache?: boolean;
+  timeout?: number;
+}
 
 /**
  * Config.ly: the dead simple place to store and retrieve your static/config data.
@@ -35,20 +40,25 @@ const GET_API_PATH = '/api/v1/value';
  * receive updates to that variable, so be sure to call get() periodically.
  */
 class Configly {
+  private static instance?: Configly;
+  private cache: Record<string, any>;
+  private cacheTtl: Record<string, number>;
+  private apiKey: string;
+  private options: ConfiglyOptions;
+
   /**
    * This method should NOT be called externally; please use Configly.init().
    */
-  constructor () {
-    if (!!Configly.instance) {
-      return Configly.instance;
-    }
-
+  private constructor () {
     this.cache = {};
     this.cacheTtl = {};
-    this.host = 'https://api.config.ly';
-    this.enableCache = true;
     this.apiKey = '';
-    this.timeout = 3000;
+
+    this.options = {
+      host: 'https://api.config.ly',
+      timeout: 3000,
+      enableCache: true,
+    }
   }
 
   /*
@@ -65,7 +75,7 @@ class Configly {
    * @return Configly instance
    * @throws Error if an API Key is not supplied or if init is called multiple times.
    */
-  static init(apiKey, options) {
+  static init(apiKey: string, options: ConfiglyOptions) {
     if (!apiKey || !apiKey.length || apiKey.length == 0) {
       throw new Error('You must supply your API Key. You can find it by logging in to Config.ly');
     }
@@ -76,28 +86,38 @@ class Configly {
 
     let inst = new Configly();
     options = options || {};
-    inst.host = removeSlash(options.host || inst.host);
-    inst.enableCache = options.enableCache === undefined ? inst.enableCache : options.enableCache;
+    inst.options.host = removeSlash(options.host || inst.options.host);
+    inst.options.enableCache = 
+        options.enableCache === undefined ? inst.options.enableCache : options.enableCache;
     inst.apiKey = apiKey;
-    inst.timeout = options.timeout || inst.timeout;
+    inst.options.timeout = options.timeout || inst.options.timeout;
+
     Configly.instance = inst;
     return Configly.instance;
   }
+
   /*
    * @return existing Configy instance. Configly.init() must be called before any invocation of
    * getInstance()
    */
-  static getInstance() {
-    if (!Configly.instance) {
+  static getInstance(): Configly {
+    if (!Configly.isInitialized()) {
       throw new Error('Configly.getInstance() is called before Configly.init(); you must call init.');
     }
-    return Configly.instance;
+    return Configly.instance!;
   }
-  static getUnixTimestampSecs() {
+
+  /*
+   * @return true if init() has been called
+   */
+  static isInitialized(): boolean {
+    return !!Configly.instance;
+  }
+  static getUnixTimestampSecs(): number {
     return Math.round(Date.now() / 1000);
   }
 
-  _isCached(key) {
+  _isCached(key: string): boolean {
     let value = this.cache[key];
     if (!value) {
       return false;
@@ -108,7 +128,7 @@ class Configly {
     return true;
   }
 
-  _cacheGet(key) {
+  _cacheGet(key: string): any {
     return this.cache[key];
   }
 
@@ -130,7 +150,7 @@ class Configly {
    *     - TypeError if key is not a string or omitted
    *     - Error if key an empty string
    */
-  get(key, options) {
+  get(key: string, options: ConfiglyOptions): Promise<any> {
     if (typeof key !== 'string') {
       return Promise.reject(new TypeError('key must be a string'));
     }
@@ -140,7 +160,7 @@ class Configly {
 
     options = options || {};
 
-    const headers = {
+    const headers: Record<string, string> = {
       'Accept': 'application/json',
     };
 
@@ -151,7 +171,7 @@ class Configly {
     let cacheIsEnabled = true;
     if (options.enableCache !== undefined) {
       cacheIsEnabled = options.enableCache;
-    } else if (!this.enableCache) {
+    } else if (!this.options.enableCache) {
       cacheIsEnabled = false;
     }
 
@@ -160,18 +180,18 @@ class Configly {
       return Promise.resolve(this._cacheGet(key));
     }
 
-    let url = `${this.host}${GET_API_PATH}`;
+    let url = `${this.options.host}${GET_API_PATH}`;
     return axios.get(url, {
       auth: {
         username: this.apiKey,
       },
       headers,
       params: { keys: [ key ] },
-      paramsSerializer: (params) => {
+      paramsSerializer: (params: any) => {
         return qs.stringify(params, {arrayFormat: 'brackets'})
       },
-      timeout: options.timeout || this.timeout || 3000,
-    }).then((response) => {
+      timeout: options.timeout || this.options.timeout || 3000,
+    }).then((response: any) => {
       let { value, ttl } = response.data.data[ key ] || {};
 
       // There should always be a TTL. But just in case.
@@ -184,23 +204,23 @@ class Configly {
       return value;
     }).catch(Configly.handleGetError);
   }
-  static makeError(status, message, originalError) {
+  static makeError(status: string, message: string, originalError: any) {
     return { status, message, originalError }
   }
 
-  static handleGetError(error) {
-    let status = Configly.ERRORS.OTHER;
+  static handleGetError(error: any) {
+    let status = ERRORS.OTHER;
     let message = [
       'Something went wrong. Have you upgraded to the latest client?',
       "Take a look at 'originalError' inside the error object for more details."
     ].join('');
 
     if (error.response) {
-      status = error.response.status;
-      status = status == 401 ? Configly.ERRORS.INVALID_API_KEY : Configly.ERRORS.OTHER;
+      const statusCode: number = error.response.status;
+      status = statusCode === 401 ? ERRORS.INVALID_API_KEY : ERRORS.OTHER;
       message = (error.response.data || '').substring(0, 1000);
     } else if (error.code == 'ECONNREFUSED') {
-      status = Configly.ERRORS.CONNECTION_ERROR;
+      status = ERRORS.CONNECTION_ERROR;
       message = [
         'Configly didn\'t receive an HTTP response.',
         'This could be because of a network disruption with the server or a bad supplied hostname.',
@@ -216,15 +236,16 @@ class Configly {
    * externally.
    */
   destroy() {
-    Configly.instance = null;
+    Configly.instance = undefined;
   }
 }
-Configly.ERRORS = {
+const ERRORS = {
   OTHER: 'OTHER',
   CONNECTION_ERROR: 'CONNECTION_ERROR',
   INVALID_API_KEY: 'INVALID_API_KEY',
 };
-Object.freeze(Configly.ERRORS);
+Object.freeze(ERRORS);
 
-Configly.instance = null;
 module.exports = Configly;
+module.exports.default = Configly;
+module.exports.ERRORS = ERRORS;
