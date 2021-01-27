@@ -37,7 +37,7 @@ interface ConfiglyOptions {
  * recommend storing the value to a local variable; BUT, be aware that this means you won't
  * receive updates to that variable, so be sure to call get() periodically.
  */
-class Configly {
+export class Configly {
   private static instance?: Configly;
   private cache: Record<string, any>;
   private cacheTtl: Record<string, number>;
@@ -73,7 +73,7 @@ class Configly {
    * @return Configly instance
    * @throws Error if an API Key is not supplied or if init is called multiple times.
    */
-  static init(apiKey: string, options: ConfiglyOptions) {
+  static init(apiKey: string, options?: ConfiglyOptions) {
     if (!apiKey || !apiKey.length || apiKey.length == 0) {
       throw new Error('You must supply your API Key. You can find it by logging in to Config.ly');
     }
@@ -148,7 +148,7 @@ class Configly {
    *     - TypeError if key is not a string or omitted
    *     - Error if key an empty string
    */
-  get(key: string, options: ConfiglyOptions): Promise<any> {
+  get(key: string, options?: ConfiglyOptions): Promise<any> {
     if (typeof key !== 'string') {
       return Promise.reject(new TypeError('key must be a string'));
     }
@@ -240,13 +240,12 @@ class Configly {
     Configly.instance = undefined;
   }
 }
-const ERRORS = {
+
+export const ERRORS = {
   OTHER: 'OTHER',
   CONNECTION_ERROR: 'CONNECTION_ERROR',
   INVALID_API_KEY: 'INVALID_API_KEY',
 };
 Object.freeze(ERRORS);
 
-module.exports = Configly;
-module.exports.default = Configly;
-module.exports.ERRORS = ERRORS;
+export default Configly;

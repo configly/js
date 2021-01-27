@@ -1,4 +1,4 @@
-const Configly = require('../src')
+const { Configly, ERRORS } = require('../src')
 
 const axios = require('axios')
 
@@ -194,7 +194,7 @@ test('get() called with an unknown ApiToken', async (done) => {
     await Configly.init('abc').get(key)
   } catch (e) {
     wasError = true
-    expect(e.status).toEqual(Configly.ERRORS.INVALID_API_KEY)
+    expect(e.status).toEqual(ERRORS.INVALID_API_KEY)
     expect(e.message).toEqual('Not allowed')
     expect(e.originalError).toEqual(error)
   }
@@ -217,7 +217,7 @@ test('get() called with an arbitrary HTTP error', async (done) => {
     await Configly.init('abc').get(key)
   } catch (e) {
     wasError = true
-    expect(e.status).toEqual(Configly.ERRORS.OTHER)
+    expect(e.status).toEqual(ERRORS.OTHER)
     expect(e.message).toEqual('Arbitrary error')
     expect(e.originalError).toEqual(error)
   }
@@ -236,7 +236,7 @@ test('get() connection error', async (done) => {
     await Configly.init('abc').get(key)
   } catch (e) {
     wasError = true
-    expect(e.status).toEqual(Configly.ERRORS.CONNECTION_ERROR)
+    expect(e.status).toEqual(ERRORS.CONNECTION_ERROR)
     expect(e.originalError).toEqual(error)
   }
   expect(wasError).toEqual(true)
