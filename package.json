@@ -1,12 +1,27 @@
 {
   "name": "configly-js",
-  "version": "2.0.5",
+  "version": "3.0.0",
+  "license": "MIT",
   "description": "The dead simple place to put and retrieve static/config data into your Node.js application / JS",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
   "scripts": {
-    "test": "jest",
     "coverage": "jest --coverage",
-    "update-coverage": "jest --coverage && coveralls < coverage/lcov.info"
+    "update-coverage": "jest --coverage && coveralls < coverage/lcov.info",
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
   },
   "repository": {
     "type": "git",
@@ -20,26 +35,52 @@
     "config.ly",
     "client"
   ],
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "peerDependencies": {},
+  "husky": {
+    "hooks": {}
+  },
   "author": {
     "name": "Configly",
     "email": "configlyco@gmail.com",
     "url": "https//config.ly"
   },
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/configly/js/issues"
   },
   "homepage": "https://github.com/configly/node#readme",
   "dependencies": {
     "assert": "^2.0.0",
-    "axios": "^0.20.0",
+    "axios": "^0.21.1",
     "qs": "^6.9.4",
     "remove-trailing-slash": "^0.1.1"
   },
+  "module": "dist/configly-js.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/configly-js.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/configly-js.esm.js",
+      "limit": "10 KB"
+    }
+  ],
   "devDependencies": {
+    "@size-limit/preset-small-lib": "^4.9.1",
     "coveralls": "^3.1.0",
     "jest": "^26.5.3",
     "webpack": "^5.4.0",
-    "webpack-cli": "^4.2.0"
+    "webpack-cli": "^4.2.0",
+    "husky": "^4.3.8",
+    "size-limit": "^4.9.1",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.1.0",
+    "typescript": "^4.1.3"
   }
 }

@@ -2,5 +2,7 @@ node_modules
 _dev
 .vscode
 .DS_Store
+dist
 coverage/
 .coveralls.yml
+yarn.lock

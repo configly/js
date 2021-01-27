@@ -20,11 +20,13 @@ Table of Contents
     * [4. Fetch the Config](#4-fetch-the-config)
     * [For use in browsers](#for-use-in-browsers)
   * [Usage](#usage)
+     * [With Typescript](#with-typescript)
      * [Using Promises](#using-promises)
   * [API Reference](#api-reference)
      * [Initialization/`init()`](#initialization)
         * [Options](#options)
         * [Errors](#errors)
+     * [`isInitialized()`](#-isinitialized---)
      * [`getInstance()`](#-getinstance---)
      * [`get(key, options?)`](#getapi_key-options)
         * [Basic example](#basic-example)
@@ -155,7 +157,7 @@ npm install configly-js
 In that same folder, create a JavaScript file with the following content:
 ```js
 const API_KEY = 'YOUR_API_KEY';
-const Configly = require('configly-js');
+const Configly = require('configly-js').Configly;
 const configly = Configly.init(API_KEY);
 
 (async () => {
@@ -226,10 +228,11 @@ store_catalog:
 ```
 On the Node.JS / JavaScript client:
 
-> You can run this code as-is since it uses our demo code. 
+> You can run this code as-is since it uses our demo API Key.
+
 ```js
 const API_KEY = 'Dem0apiKEY'; // This is our demo API Key.
-const Configly = require('configly-js');
+const Configly = require('configly-js').Configly;
 const configly = Configly.init(API_KEY);
 
 (async () => {
@@ -259,10 +262,17 @@ const configly = Configly.init(API_KEY);
 
 ```
 
+### With Typescript
+Configly works natively with TypeScript:
+```typescript
+import Configly from 'configly-js';
+Configly.init('api_key');
+```
+
 ### Using Promises
 Configly's `get()` returns a chainable promise which can be used instead of a regular callback:
 
-> You can run this code as-is since it uses our demo code. 
+> You can run this code as-is since it uses our demo code.
 ```js
 const Configly = require('configly-js');
 const configly = Configly.init('Dem0apiKEY'); // This uses our demo API Key.
@@ -330,6 +340,16 @@ multiple times. The method does NOT check for validity of the key; that happens 
 request. See: [`get() errors`](#errors-1)
 
 
+### `isInitialized()`
+Return `true` if `init` has been successfully called.
+
+If you would like to make your initialization code idempotent, you can write
+something like this:
+```js
+if (!Configly.isInitialized()) {
+   Configly.init(API_KEY);
+ }
+```
 ### `getInstance()`
 
 To access the global instance, you can call `getInstance()`. You *must* call `init()` first.
@@ -441,7 +461,7 @@ Like the constructor, `get()` accepts the same set of `options` that override an
 `get()` call only.
 
 ```js
-const Configly = require('Configly');
+const Configly = require('Configly').Configly;
 const configly = Configly.init(API_KEY, {
   timeout: 1000,
   enableCache: false,
