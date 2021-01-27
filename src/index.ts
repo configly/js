@@ -4,8 +4,6 @@ const removeSlash = require('remove-trailing-slash');
 
 const VERSION = require('../package.json').version;
 
-const GET_KEY_IDENTIFIER = 'keys[]';
-
 const GET_API_PATH = '/api/v1/value';
 
 interface ConfiglyOptions {
@@ -181,17 +179,20 @@ class Configly {
     }
 
     let url = `${this.options.host}${GET_API_PATH}`;
-    return axios.get(url, {
-      auth: {
-        username: this.apiKey,
-      },
-      headers,
-      params: { keys: [ key ] },
-      paramsSerializer: (params: any) => {
-        return qs.stringify(params, {arrayFormat: 'brackets'})
-      },
-      timeout: options.timeout || this.options.timeout || 3000,
-    }).then((response: any) => {
+    return axios.get(
+      url,
+      {
+        auth: {
+          username: this.apiKey,
+        },
+        headers,
+        params: { keys: [ key ] },
+        paramsSerializer: (params: any) => {
+          return qs.stringify(params, {arrayFormat: 'brackets'})
+        },
+        timeout: options.timeout || this.options.timeout || 3000,
+      }
+    ).then((response: any) => {
       let { value, ttl } = response.data.data[ key ] || {};
 
       // There should always be a TTL. But just in case.
@@ -219,7 +220,7 @@ class Configly {
       const statusCode: number = error.response.status;
       status = statusCode === 401 ? ERRORS.INVALID_API_KEY : ERRORS.OTHER;
       message = (error.response.data || '').substring(0, 1000);
-    } else if (error.code == 'ECONNREFUSED') {
+    } else if (error.code === 'ECONNREFUSED') {
       status = ERRORS.CONNECTION_ERROR;
       message = [
         'Configly didn\'t receive an HTTP response.',

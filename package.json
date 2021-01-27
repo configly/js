@@ -43,8 +43,7 @@
   },
   "peerDependencies": {},
   "husky": {
-    "hooks": {
-    }
+    "hooks": {}
   },
   "author": {
     "name": "Configly",
@@ -79,7 +78,7 @@
     "coveralls": "^3.1.0",
     "jest": "^26.5.3",
     "webpack": "^5.4.0",
-    "webpack-cli": "^4.2.0"
+    "webpack-cli": "^4.2.0",
     "eslint": "^7.18.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.22.1",
@@ -87,7 +86,6 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "husky": "^4.3.8",
-    "jest": "^26.5.3",
     "size-limit": "^4.9.1",
     "tsdx": "^0.14.1",
     "tslib": "^2.1.0",
